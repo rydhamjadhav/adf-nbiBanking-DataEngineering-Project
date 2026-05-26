@@ -304,10 +304,8 @@ git clone https://github.com/your-username/NBI-ADF-Banking-Project.git
 
 ## 👤 Author
 
-**Rudra V. Gandhi**
-- 🎓 Navrachana University (NUV)
-- 📧 rudra.v.gandhi@nuv.ac.in
-- 🏦 NBI Data Engineering Internship 2024
+**Rydham Jadhav**
+- 🎓 Svit Vasad
 
 ---
 
