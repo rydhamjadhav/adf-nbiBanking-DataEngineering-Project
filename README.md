@@ -15,10 +15,9 @@
 | Field | Details |
 |-------|---------|
 | **Assignment** | ADF Capstone — Banking Data Pipeline |
-| **Student** | Rudra V. Gandhi |
-| **University** | Navrachana University (NUV) |
+| **Student** | Rydham Jadhav |
 | **Duration** | 5 Working Days |
-| **ADF Instance** | `adf-nbi-banking` |
+| **ADF Instance** | `adf-nbibankingg` |
 | **SQL Database** | `sqldb-nbi-dw` |
 | **Total Tables** | 12 (5 Dim + 4 Fact + 3 Agg) |
 | **Total Records** | 12,507+ rows across all tables |
