@@ -1,0 +1,112 @@
+{
+	"name": "df_dim_customer",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Customer",
+						"type": "DatasetReference"
+					},
+					"name": "sourcecustomers"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_customers",
+						"type": "DatasetReference"
+					},
+					"name": "sinkcustomers"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filteractive"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          customer_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          date_of_birth as string,",
+				"          gender as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          city as string,",
+				"          state as string,",
+				"          pincode as string,",
+				"          customer_type as string,",
+				"          occupation as string,",
+				"          annual_income as string,",
+				"          kyc_status as string,",
+				"          registration_date as string,",
+				"          branch_id as string,",
+				"          relationship_manager_id as string,",
+				"          is_active as string,",
+				"          pan_number as string,",
+				"          credit_score as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcecustomers",
+				"sourcecustomers filter(toInteger(is_active) == 1) ~> filteractive",
+				"filteractive sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          customer_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          date_of_birth as date,",
+				"          gender as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          city as string,",
+				"          state as string,",
+				"          pincode as string,",
+				"          customer_type as string,",
+				"          occupation as string,",
+				"          annual_income as decimal(14,2),",
+				"          kyc_status as string,",
+				"          registration_date as date,",
+				"          branch_id as string,",
+				"          relationship_manager_id as string,",
+				"          pan_number as string,",
+				"          credit_score as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          customer_id,",
+				"          first_name,",
+				"          last_name,",
+				"          date_of_birth,",
+				"          gender,",
+				"          email,",
+				"          mobile,",
+				"          city,",
+				"          state,",
+				"          pincode,",
+				"          customer_type,",
+				"          occupation,",
+				"          annual_income,",
+				"          kyc_status,",
+				"          registration_date,",
+				"          branch_id,",
+				"          relationship_manager_id,",
+				"          pan_number,",
+				"          credit_score",
+				"     )) ~> sinkcustomers"
+			]
+		}
+	}
+}

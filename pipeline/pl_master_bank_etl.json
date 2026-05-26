@@ -1,0 +1,124 @@
+{
+	"name": "pl_master_bank_etl",
+	"properties": {
+		"activities": [
+			{
+				"name": "pl_load_dimensions",
+				"type": "ExecutePipeline",
+				"dependsOn": [],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_load_dimensions",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "pl_load_fact_transactions",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_load_dimensions",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_load_fact_transactions",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "pl_load_fact_loans",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_load_fact_transactions",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_load_fact_loans",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "pl_load_fraud_and_balances",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_load_fact_transactions",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_load_fraud_and_balances",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			},
+			{
+				"name": "pl_build_aggregations",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "pl_load_fact_loans",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "pl_load_fraud_and_balances",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "pl_build_aggregations",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2026-05-26T05:57:24Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

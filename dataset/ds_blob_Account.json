@@ -1,0 +1,85 @@
+{
+	"name": "ds_blob_Account",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_source",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Blob_csv"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "bank_accounts.csv",
+				"folderPath": "Accounts.csv",
+				"container": "source-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "account_number",
+				"type": "String"
+			},
+			{
+				"name": "customer_id",
+				"type": "String"
+			},
+			{
+				"name": "account_type",
+				"type": "String"
+			},
+			{
+				"name": "branch_id",
+				"type": "String"
+			},
+			{
+				"name": "open_date",
+				"type": "String"
+			},
+			{
+				"name": "close_date",
+				"type": "String"
+			},
+			{
+				"name": "status",
+				"type": "String"
+			},
+			{
+				"name": "current_balance",
+				"type": "String"
+			},
+			{
+				"name": "available_balance",
+				"type": "String"
+			},
+			{
+				"name": "currency",
+				"type": "String"
+			},
+			{
+				"name": "interest_rate",
+				"type": "String"
+			},
+			{
+				"name": "nominee_name",
+				"type": "String"
+			},
+			{
+				"name": "is_joint_account",
+				"type": "String"
+			},
+			{
+				"name": "minimum_balance",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

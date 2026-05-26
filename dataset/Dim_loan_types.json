@@ -1,0 +1,30 @@
+{
+	"name": "Dim_loan_types",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "loan_type_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "loan_type",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dim_loan_types"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

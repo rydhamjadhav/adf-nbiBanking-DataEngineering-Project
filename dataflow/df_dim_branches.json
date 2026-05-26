@@ -1,0 +1,177 @@
+{
+	"name": "df_dim_branches",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Customer",
+						"type": "DatasetReference"
+					},
+					"name": "customersbranch"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Account",
+						"type": "DatasetReference"
+					},
+					"name": "accountsbranch"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Employee",
+						"type": "DatasetReference"
+					},
+					"name": "employeesbranch"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_branches",
+						"type": "DatasetReference"
+					},
+					"name": "sinkbranches"
+				}
+			],
+			"transformations": [
+				{
+					"name": "select1"
+				},
+				{
+					"name": "accountsbranches"
+				},
+				{
+					"name": "selectemployees"
+				},
+				{
+					"name": "unionbranches"
+				},
+				{
+					"name": "aggregatebranches"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          customer_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          date_of_birth as string,",
+				"          gender as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          city as string,",
+				"          state as string,",
+				"          pincode as string,",
+				"          customer_type as string,",
+				"          occupation as string,",
+				"          annual_income as string,",
+				"          kyc_status as string,",
+				"          registration_date as string,",
+				"          branch_id as string,",
+				"          relationship_manager_id as string,",
+				"          is_active as string,",
+				"          pan_number as string,",
+				"          credit_score as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> customersbranch",
+				"source(output(",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          account_type as string,",
+				"          branch_id as string,",
+				"          open_date as string,",
+				"          close_date as string,",
+				"          status as string,",
+				"          current_balance as string,",
+				"          available_balance as string,",
+				"          currency as string,",
+				"          interest_rate as string,",
+				"          nominee_name as string,",
+				"          is_joint_account as string,",
+				"          minimum_balance as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> accountsbranch",
+				"source(output(",
+				"          employee_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          department as string,",
+				"          designation as string,",
+				"          branch_id as string,",
+				"          city as string,",
+				"          date_of_joining as string,",
+				"          date_of_birth as string,",
+				"          education as string,",
+				"          certifications as string,",
+				"          base_salary as string,",
+				"          performance_rating as string,",
+				"          manager_id as string,",
+				"          is_active as string,",
+				"          total_customers_managed as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> employeesbranch",
+				"customersbranch select(mapColumn(",
+				"          city,",
+				"          state,",
+				"          branch_id",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"accountsbranch select(mapColumn(",
+				"          account_number,",
+				"          customer_id,",
+				"          account_type,",
+				"          branch_id,",
+				"          open_date,",
+				"          close_date,",
+				"          status,",
+				"          current_balance,",
+				"          available_balance,",
+				"          currency,",
+				"          interest_rate,",
+				"          nominee_name,",
+				"          is_joint_account,",
+				"          minimum_balance",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> accountsbranches",
+				"employeesbranch select(mapColumn(",
+				"          branch_id,",
+				"          city",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectemployees",
+				"select1, accountsbranches, selectemployees union(byName: true)~> unionbranches",
+				"unionbranches aggregate(groupBy(branch_id),",
+				"     city = first(city),",
+				"          state = first(state)) ~> aggregatebranches",
+				"aggregatebranches sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          branch_id as string,",
+				"          city as string,",
+				"          state as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkbranches"
+			]
+		}
+	}
+}

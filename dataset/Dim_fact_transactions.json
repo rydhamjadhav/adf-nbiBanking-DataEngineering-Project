@@ -1,0 +1,118 @@
+{
+	"name": "Dim_fact_transactions",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "transaction_id",
+				"type": "varchar"
+			},
+			{
+				"name": "account_number",
+				"type": "varchar"
+			},
+			{
+				"name": "transaction_date",
+				"type": "date"
+			},
+			{
+				"name": "transaction_time",
+				"type": "time",
+				"scale": 7
+			},
+			{
+				"name": "transaction_type",
+				"type": "varchar"
+			},
+			{
+				"name": "transaction_mode",
+				"type": "varchar"
+			},
+			{
+				"name": "category",
+				"type": "varchar"
+			},
+			{
+				"name": "channel",
+				"type": "varchar"
+			},
+			{
+				"name": "amount",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "currency",
+				"type": "varchar"
+			},
+			{
+				"name": "status",
+				"type": "varchar"
+			},
+			{
+				"name": "beneficiary_account",
+				"type": "varchar"
+			},
+			{
+				"name": "beneficiary_name",
+				"type": "varchar"
+			},
+			{
+				"name": "reference_number",
+				"type": "varchar"
+			},
+			{
+				"name": "narration",
+				"type": "varchar"
+			},
+			{
+				"name": "balance_after_txn",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "is_suspicious",
+				"type": "bit"
+			},
+			{
+				"name": "is_internal_transfer",
+				"type": "bit"
+			},
+			{
+				"name": "meta_device_id",
+				"type": "varchar"
+			},
+			{
+				"name": "meta_ip_address",
+				"type": "varchar"
+			},
+			{
+				"name": "meta_location_city",
+				"type": "varchar"
+			},
+			{
+				"name": "meta_processing_bank",
+				"type": "varchar"
+			},
+			{
+				"name": "meta_batch_id",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "fact_transactions"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

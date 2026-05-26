@@ -1,0 +1,91 @@
+{
+	"name": "df_dim_employees",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Employee",
+						"type": "DatasetReference"
+					},
+					"name": "dfdimemployees"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_employees",
+						"type": "DatasetReference"
+					},
+					"name": "sinkemployees"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          employee_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          department as string,",
+				"          designation as string,",
+				"          branch_id as string,",
+				"          city as string,",
+				"          date_of_joining as string,",
+				"          date_of_birth as string,",
+				"          education as string,",
+				"          certifications as string,",
+				"          base_salary as string,",
+				"          performance_rating as string,",
+				"          manager_id as string,",
+				"          is_active as string,",
+				"          total_customers_managed as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> dfdimemployees",
+				"dfdimemployees derive(certification_count = iif(certifications == 'None', 0, size(split(certifications, ','))),",
+				"          is_manager = iif(isNull(manager_id), 0, 1)) ~> derivedColumn1",
+				"derivedColumn1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          employee_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          department as string,",
+				"          designation as string,",
+				"          branch_id as string,",
+				"          city as string,",
+				"          date_of_joining as date,",
+				"          date_of_birth as date,",
+				"          education as string,",
+				"          certifications as string,",
+				"          certification_count as integer,",
+				"          base_salary as decimal(12,2),",
+				"          performance_rating as decimal(3,1),",
+				"          manager_id as string,",
+				"          is_active as boolean,",
+				"          total_customers_managed as integer,",
+				"          is_manager as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkemployees"
+			]
+		}
+	}
+}

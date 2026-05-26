@@ -1,0 +1,97 @@
+{
+	"name": "df_fact_loans",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Json",
+						"type": "DatasetReference"
+					},
+					"name": "loanssource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_fact_loans",
+						"type": "DatasetReference"
+					},
+					"name": "sinkloans"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedloans"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          loan_id as string,",
+				"          customer_id as string,",
+				"          loan_type as string,",
+				"          branch_id as string,",
+				"          sanction_date as string,",
+				"          disbursement_date as string,",
+				"          maturity_date as string,",
+				"          principal_amount as double,",
+				"          outstanding_amount as double,",
+				"          interest_rate as double,",
+				"          tenure_months as integer,",
+				"          emi_amount as double,",
+				"          emi_due_date as integer,",
+				"          total_emis_paid as integer,",
+				"          emis_overdue as integer,",
+				"          collateral_type as string,",
+				"          collateral_value as double,",
+				"          loan_status as string,",
+				"          loan_officer_id as string,",
+				"          is_npa as integer,",
+				"          insurance_linked as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'arrayOfDocuments') ~> loanssource",
+				"loanssource derive({insurancelinkedflag } = iif(insurance_linked == true(), 'Yes', 'No'),",
+				"          {overduecategory } = iif(emis_overdue == 0, 'Current',   iif(emis_overdue <= 2, 'Special Mention',     iif(emis_overdue <= 4, 'Sub-Standard',       'Doubtful')))) ~> derivedloans",
+				"derivedloans sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          loan_id as string,",
+				"          customer_id as string,",
+				"          loan_type as string,",
+				"          branch_id as string,",
+				"          sanction_date as date,",
+				"          disbursement_date as date,",
+				"          maturity_date as date,",
+				"          principal_amount as decimal(14,2),",
+				"          outstanding_amount as decimal(14,2),",
+				"          interest_rate as decimal(5,2),",
+				"          tenure_months as integer,",
+				"          emi_amount as decimal(12,2),",
+				"          emi_due_date as integer,",
+				"          total_emis_paid as integer,",
+				"          emis_overdue as integer,",
+				"          overdue_category as string,",
+				"          collateral_type as string,",
+				"          collateral_value as decimal(14,2),",
+				"          loan_status as string,",
+				"          loan_officer_id as string,",
+				"          is_npa as boolean,",
+				"          insurance_linked_flag as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkloans"
+			]
+		}
+	}
+}

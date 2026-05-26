@@ -1,0 +1,77 @@
+{
+	"name": "agg_branch_performance",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "agg_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "branch_id",
+				"type": "varchar"
+			},
+			{
+				"name": "city",
+				"type": "varchar"
+			},
+			{
+				"name": "total_accounts_opened",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_active_accounts",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_loan_amount_disbursed",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "total_active_loans",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_transactions",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_transaction_value",
+				"type": "decimal",
+				"precision": 18,
+				"scale": 2
+			},
+			{
+				"name": "avg_customer_credit_score",
+				"type": "decimal",
+				"precision": 6,
+				"scale": 1
+			},
+			{
+				"name": "total_npa_loans",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "agg_branch_performance"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

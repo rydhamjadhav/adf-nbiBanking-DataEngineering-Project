@@ -1,0 +1,97 @@
+{
+	"name": "agg_customer_360",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "customer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "full_name",
+				"type": "varchar"
+			},
+			{
+				"name": "city",
+				"type": "varchar"
+			},
+			{
+				"name": "kyc_status",
+				"type": "varchar"
+			},
+			{
+				"name": "credit_score",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "customer_type",
+				"type": "varchar"
+			},
+			{
+				"name": "total_accounts_held",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_active_accounts",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_loans",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_outstanding_loan_amt",
+				"type": "decimal",
+				"precision": 16,
+				"scale": 2
+			},
+			{
+				"name": "total_npa_loans",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "txn_value_last_12_months",
+				"type": "decimal",
+				"precision": 16,
+				"scale": 2
+			},
+			{
+				"name": "txn_count_last_12_months",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "last_transaction_date",
+				"type": "date"
+			},
+			{
+				"name": "total_fraud_alerts",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "confirmed_fraud_count",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "agg_customer_360"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

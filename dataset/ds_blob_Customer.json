@@ -1,0 +1,108 @@
+{
+	"name": "ds_blob_Customer",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_source",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Blob_csv"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "Customer.csv",
+				"container": "source-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "customer_id",
+				"type": "String"
+			},
+			{
+				"name": "first_name",
+				"type": "String"
+			},
+			{
+				"name": "last_name",
+				"type": "String"
+			},
+			{
+				"name": "date_of_birth",
+				"type": "String"
+			},
+			{
+				"name": "gender",
+				"type": "String"
+			},
+			{
+				"name": "email",
+				"type": "String"
+			},
+			{
+				"name": "mobile",
+				"type": "String"
+			},
+			{
+				"name": "city",
+				"type": "String"
+			},
+			{
+				"name": "state",
+				"type": "String"
+			},
+			{
+				"name": "pincode",
+				"type": "String"
+			},
+			{
+				"name": "customer_type",
+				"type": "String"
+			},
+			{
+				"name": "occupation",
+				"type": "String"
+			},
+			{
+				"name": "annual_income",
+				"type": "String"
+			},
+			{
+				"name": "kyc_status",
+				"type": "String"
+			},
+			{
+				"name": "registration_date",
+				"type": "String"
+			},
+			{
+				"name": "branch_id",
+				"type": "String"
+			},
+			{
+				"name": "relationship_manager_id",
+				"type": "String"
+			},
+			{
+				"name": "is_active",
+				"type": "String"
+			},
+			{
+				"name": "pan_number",
+				"type": "String"
+			},
+			{
+				"name": "credit_score",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

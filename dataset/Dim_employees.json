@@ -1,0 +1,107 @@
+{
+	"name": "Dim_employees",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "employee_id",
+				"type": "varchar"
+			},
+			{
+				"name": "first_name",
+				"type": "varchar"
+			},
+			{
+				"name": "last_name",
+				"type": "varchar"
+			},
+			{
+				"name": "email",
+				"type": "varchar"
+			},
+			{
+				"name": "mobile",
+				"type": "varchar"
+			},
+			{
+				"name": "department",
+				"type": "varchar"
+			},
+			{
+				"name": "designation",
+				"type": "varchar"
+			},
+			{
+				"name": "branch_id",
+				"type": "varchar"
+			},
+			{
+				"name": "city",
+				"type": "varchar"
+			},
+			{
+				"name": "date_of_joining",
+				"type": "date"
+			},
+			{
+				"name": "date_of_birth",
+				"type": "date"
+			},
+			{
+				"name": "education",
+				"type": "varchar"
+			},
+			{
+				"name": "certifications",
+				"type": "varchar"
+			},
+			{
+				"name": "certification_count",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "base_salary",
+				"type": "decimal",
+				"precision": 12,
+				"scale": 2
+			},
+			{
+				"name": "performance_rating",
+				"type": "decimal",
+				"precision": 3,
+				"scale": 1
+			},
+			{
+				"name": "manager_id",
+				"type": "varchar"
+			},
+			{
+				"name": "is_active",
+				"type": "bit"
+			},
+			{
+				"name": "total_customers_managed",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "is_manager",
+				"type": "bit"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dim_employees"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,62 @@
+{
+	"name": "Dim_factaccount_balances",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "balance_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "account_number",
+				"type": "varchar"
+			},
+			{
+				"name": "customer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "account_type",
+				"type": "varchar"
+			},
+			{
+				"name": "status",
+				"type": "varchar"
+			},
+			{
+				"name": "current_balance",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "available_balance",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "currency",
+				"type": "varchar"
+			},
+			{
+				"name": "snapshot_date",
+				"type": "date"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "fact_account_balances"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

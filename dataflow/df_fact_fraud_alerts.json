@@ -1,0 +1,99 @@
+{
+	"name": "df_fact_fraud_alerts",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Fraud_alerts",
+						"type": "DatasetReference"
+					},
+					"name": "fraudsource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_fact_fraud_alerts",
+						"type": "DatasetReference"
+					},
+					"name": "sinkfraudalerts"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedfraudalerts"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          alert_id as string,",
+				"          transaction_id as string,",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          alert_type as string,",
+				"          severity as string,",
+				"          alert_raised_date as string,",
+				"          alert_raised_time as string,",
+				"          alert_status as string,",
+				"          assigned_to as string,",
+				"          resolution as string,",
+				"          resolved_date as string,",
+				"          resolution_days as string,",
+				"          amount_at_risk as string,",
+				"          is_confirmed_fraud as string,",
+				"          sar_filed as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> fraudsource",
+				"fraudsource derive({unassignedflag } = iif(isNull(assigned_to), 1, 0)) ~> derivedfraudalerts",
+				"derivedfraudalerts sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          alert_id as string,",
+				"          transaction_id as string,",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          alert_type as string,",
+				"          severity as string,",
+				"          alert_raised_date as date,",
+				"          alert_raised_time as string,",
+				"          alert_status as string,",
+				"          assigned_to as string,",
+				"          unassigned_flag as boolean,",
+				"          resolution as string,",
+				"          resolved_date as date,",
+				"          resolution_days as integer,",
+				"          amount_at_risk as decimal(14,2),",
+				"          is_confirmed_fraud as boolean,",
+				"          sar_filed as boolean",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          alert_id,",
+				"          transaction_id,",
+				"          account_number,",
+				"          customer_id,",
+				"          alert_type,",
+				"          severity,",
+				"          alert_raised_date,",
+				"          alert_raised_time,",
+				"          alert_status,",
+				"          assigned_to,",
+				"          unassigned_flag = {unassignedflag },",
+				"          resolution",
+				"     )) ~> sinkfraudalerts"
+			]
+		}
+	}
+}

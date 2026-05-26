@@ -1,0 +1,116 @@
+{
+	"name": "df_fact_transactions",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Transactions",
+						"type": "DatasetReference"
+					},
+					"name": "transactionssource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_fact_transactions",
+						"type": "DatasetReference"
+					},
+					"name": "sinktransactions"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedtransactions"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          transaction_id as string,",
+				"          account_number as string,",
+				"          transaction_date as string,",
+				"          transaction_time as string,",
+				"          transaction_type as string,",
+				"          transaction_mode as string,",
+				"          category as string,",
+				"          channel as string,",
+				"          amount as double,",
+				"          currency as string,",
+				"          status as string,",
+				"          beneficiary_account as string,",
+				"          beneficiary_name as string,",
+				"          reference_number as string,",
+				"          narration as string,",
+				"          balance_after_txn as double,",
+				"          is_suspicious as integer,",
+				"          metadata as (device_id as string, ip_address as string, location_city as string, processing_bank as string, batch_id as string)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     documentForm: 'arrayOfDocuments') ~> transactionssource",
+				"transactionssource derive({isinternaltransfer } = iif(isNull(beneficiary_account), 1, 0),",
+				"          {metadeviceid } = metadata.device_id,",
+				"          transaction_date = iifNull(toDate(transaction_date, 'yyyy-MM-dd'), currentDate())) ~> derivedtransactions",
+				"derivedtransactions sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          transaction_id as string,",
+				"          account_number as string,",
+				"          transaction_date as date,",
+				"          transaction_time as timestamp,",
+				"          transaction_type as string,",
+				"          transaction_mode as string,",
+				"          category as string,",
+				"          channel as string,",
+				"          amount as decimal(14,2),",
+				"          currency as string,",
+				"          status as string,",
+				"          beneficiary_account as string,",
+				"          beneficiary_name as string,",
+				"          reference_number as string,",
+				"          narration as string,",
+				"          balance_after_txn as decimal(14,2),",
+				"          is_suspicious as boolean,",
+				"          is_internal_transfer as boolean,",
+				"          meta_device_id as string,",
+				"          meta_ip_address as string,",
+				"          meta_location_city as string,",
+				"          meta_processing_bank as string,",
+				"          meta_batch_id as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          transaction_id,",
+				"          account_number,",
+				"          transaction_date,",
+				"          transaction_time,",
+				"          transaction_type,",
+				"          transaction_mode,",
+				"          category,",
+				"          channel,",
+				"          amount,",
+				"          currency,",
+				"          status,",
+				"          beneficiary_account,",
+				"          beneficiary_name,",
+				"          reference_number,",
+				"          narration,",
+				"          balance_after_txn,",
+				"          is_suspicious,",
+				"          is_internal_transfer = {isinternaltransfer }",
+				"     )) ~> sinktransactions"
+			]
+		}
+	}
+}

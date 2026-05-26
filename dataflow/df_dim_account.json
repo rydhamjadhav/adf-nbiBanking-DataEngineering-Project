@@ -1,0 +1,81 @@
+{
+	"name": "df_dim_account",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Account",
+						"type": "DatasetReference"
+					},
+					"name": "accountsource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_accounts",
+						"type": "DatasetReference"
+					},
+					"name": "sinkaccounts"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedaccounts"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          account_type as string,",
+				"          branch_id as string,",
+				"          open_date as string,",
+				"          close_date as string,",
+				"          status as string,",
+				"          current_balance as string,",
+				"          available_balance as string,",
+				"          currency as string,",
+				"          interest_rate as string,",
+				"          nominee_name as string,",
+				"          is_joint_account as string,",
+				"          minimum_balance as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> accountsource",
+				"accountsource derive(account_age_years = year(currentDate()) - year(toDate(open_date, 'yyyy-MM-dd')),",
+				"          missing_nominee_flag = iif(isNull(nominee_name), 1, 0)) ~> derivedaccounts",
+				"derivedaccounts sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          account_type as string,",
+				"          branch_id as string,",
+				"          open_date as date,",
+				"          close_date as date,",
+				"          status as string,",
+				"          currency as string,",
+				"          interest_rate as decimal(5,2),",
+				"          is_joint_account as boolean,",
+				"          minimum_balance as decimal(10,2),",
+				"          nominee_name as string,",
+				"          missing_nominee_flag as boolean,",
+				"          account_age_years as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkaccounts"
+			]
+		}
+	}
+}

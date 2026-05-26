@@ -1,0 +1,220 @@
+{
+	"name": "dff_agg_customer360",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Dim_customers",
+						"type": "DatasetReference"
+					},
+					"name": "sourcedimcustomers"
+				},
+				{
+					"dataset": {
+						"referenceName": "Dim_accounts",
+						"type": "DatasetReference"
+					},
+					"name": "sourcedimaccounts"
+				},
+				{
+					"dataset": {
+						"referenceName": "Dim_fact_loans",
+						"type": "DatasetReference"
+					},
+					"name": "sourcefactloans"
+				},
+				{
+					"dataset": {
+						"referenceName": "Dim_fact_transactions",
+						"type": "DatasetReference"
+					},
+					"name": "sourcefacttransactions"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "agg_customer_360",
+						"type": "DatasetReference"
+					},
+					"name": "sinkcustomer360"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filterlast12months"
+				},
+				{
+					"name": "joincustomeraccount"
+				},
+				{
+					"name": "joinloans"
+				},
+				{
+					"name": "jointransactions"
+				},
+				{
+					"name": "aggregatecustomer360"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          customer_id as string,",
+				"          first_name as string,",
+				"          last_name as string,",
+				"          date_of_birth as date,",
+				"          gender as string,",
+				"          email as string,",
+				"          mobile as string,",
+				"          city as string,",
+				"          state as string,",
+				"          pincode as string,",
+				"          customer_type as string,",
+				"          occupation as string,",
+				"          annual_income as decimal(14,2),",
+				"          kyc_status as string,",
+				"          registration_date as date,",
+				"          branch_id as string,",
+				"          relationship_manager_id as string,",
+				"          pan_number as string,",
+				"          credit_score as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcedimcustomers",
+				"source(output(",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          account_type as string,",
+				"          branch_id as string,",
+				"          open_date as date,",
+				"          close_date as date,",
+				"          status as string,",
+				"          currency as string,",
+				"          interest_rate as decimal(5,2),",
+				"          is_joint_account as boolean,",
+				"          minimum_balance as decimal(10,2),",
+				"          nominee_name as string,",
+				"          missing_nominee_flag as boolean,",
+				"          account_age_years as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     inferDriftedColumnTypes: true,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcedimaccounts",
+				"source(output(",
+				"          loan_id as string,",
+				"          customer_id as string,",
+				"          loan_type as string,",
+				"          branch_id as string,",
+				"          sanction_date as date,",
+				"          disbursement_date as date,",
+				"          maturity_date as date,",
+				"          principal_amount as decimal(14,2),",
+				"          outstanding_amount as decimal(14,2),",
+				"          interest_rate as decimal(5,2),",
+				"          tenure_months as integer,",
+				"          emi_amount as decimal(12,2),",
+				"          emi_due_date as integer,",
+				"          total_emis_paid as integer,",
+				"          emis_overdue as integer,",
+				"          overdue_category as string,",
+				"          collateral_type as string,",
+				"          collateral_value as decimal(14,2),",
+				"          loan_status as string,",
+				"          loan_officer_id as string,",
+				"          is_npa as boolean,",
+				"          insurance_linked_flag as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcefactloans",
+				"source(output(",
+				"          transaction_id as string,",
+				"          account_number as string,",
+				"          transaction_date as date,",
+				"          transaction_time as timestamp,",
+				"          transaction_type as string,",
+				"          transaction_mode as string,",
+				"          category as string,",
+				"          channel as string,",
+				"          amount as decimal(14,2),",
+				"          currency as string,",
+				"          status as string,",
+				"          beneficiary_account as string,",
+				"          beneficiary_name as string,",
+				"          reference_number as string,",
+				"          narration as string,",
+				"          balance_after_txn as decimal(14,2),",
+				"          is_suspicious as boolean,",
+				"          is_internal_transfer as boolean,",
+				"          meta_device_id as string,",
+				"          meta_ip_address as string,",
+				"          meta_location_city as string,",
+				"          meta_processing_bank as string,",
+				"          meta_batch_id as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcefacttransactions",
+				"sourcefacttransactions filter(transaction_date >= addMonths(currentDate(), -12)) ~> filterlast12months",
+				"sourcedimcustomers, sourcedimaccounts join(sourcedimcustomers@customer_id == sourcedimaccounts@customer_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joincustomeraccount",
+				"joincustomeraccount, sourcefactloans join(sourcedimaccounts@customer_id == sourcefactloans@customer_id,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> joinloans",
+				"joinloans, filterlast12months join(sourcedimaccounts@account_number == sourcefacttransactions@account_number,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> jointransactions",
+				"jointransactions aggregate(groupBy(sourcedimcustomers@customer_id),",
+				"     {totalaccountsheld    } = countIf(!isNull(sourcedimaccounts@account_number)),",
+				"          {totaloutstandingloan } = sum(toDouble(outstanding_amount)),",
+				"          {totaltxnvalue12m     } = sum(amount),",
+				"          {creditscore          } = first(toInteger(credit_score)),",
+				"          {kycstatus            } = first(kyc_status)) ~> aggregatecustomer360",
+				"aggregatecustomer360 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          customer_id as string,",
+				"          full_name as string,",
+				"          city as string,",
+				"          kyc_status as string,",
+				"          credit_score as integer,",
+				"          customer_type as string,",
+				"          total_accounts_held as integer,",
+				"          total_active_accounts as integer,",
+				"          total_loans as integer,",
+				"          total_outstanding_loan_amt as decimal(16,2),",
+				"          total_npa_loans as integer,",
+				"          txn_value_last_12_months as decimal(16,2),",
+				"          txn_count_last_12_months as integer,",
+				"          last_transaction_date as date,",
+				"          total_fraud_alerts as integer,",
+				"          confirmed_fraud_count as integer",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkcustomer360"
+			]
+		}
+	}
+}

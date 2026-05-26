@@ -1,0 +1,100 @@
+{
+	"name": "Dim_customers",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "customer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "first_name",
+				"type": "varchar"
+			},
+			{
+				"name": "last_name",
+				"type": "varchar"
+			},
+			{
+				"name": "date_of_birth",
+				"type": "date"
+			},
+			{
+				"name": "gender",
+				"type": "varchar"
+			},
+			{
+				"name": "email",
+				"type": "varchar"
+			},
+			{
+				"name": "mobile",
+				"type": "varchar"
+			},
+			{
+				"name": "city",
+				"type": "varchar"
+			},
+			{
+				"name": "state",
+				"type": "varchar"
+			},
+			{
+				"name": "pincode",
+				"type": "varchar"
+			},
+			{
+				"name": "customer_type",
+				"type": "varchar"
+			},
+			{
+				"name": "occupation",
+				"type": "varchar"
+			},
+			{
+				"name": "annual_income",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "kyc_status",
+				"type": "varchar"
+			},
+			{
+				"name": "registration_date",
+				"type": "date"
+			},
+			{
+				"name": "branch_id",
+				"type": "varchar"
+			},
+			{
+				"name": "relationship_manager_id",
+				"type": "varchar"
+			},
+			{
+				"name": "pan_number",
+				"type": "varchar"
+			},
+			{
+				"name": "credit_score",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dim_customers"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,70 @@
+{
+	"name": "df_fact_account_balances",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_blob_Account",
+						"type": "DatasetReference"
+					},
+					"name": "accountssource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "Dim_factaccount_balances",
+						"type": "DatasetReference"
+					},
+					"name": "sinkaccountbalances"
+				}
+			],
+			"transformations": [],
+			"scriptLines": [
+				"source(output(",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          account_type as string,",
+				"          branch_id as string,",
+				"          open_date as string,",
+				"          close_date as string,",
+				"          status as string,",
+				"          current_balance as string,",
+				"          available_balance as string,",
+				"          currency as string,",
+				"          interest_rate as string,",
+				"          nominee_name as string,",
+				"          is_joint_account as string,",
+				"          minimum_balance as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> accountssource",
+				"accountssource sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          balance_id as integer,",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          account_type as string,",
+				"          status as string,",
+				"          current_balance as decimal(14,2),",
+				"          available_balance as decimal(14,2),",
+				"          currency as string,",
+				"          snapshot_date as date",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sinkaccountbalances"
+			]
+		}
+	}
+}

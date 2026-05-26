@@ -1,0 +1,123 @@
+{
+	"name": "Dim_fact_loans",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "loan_id",
+				"type": "varchar"
+			},
+			{
+				"name": "customer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "loan_type",
+				"type": "varchar"
+			},
+			{
+				"name": "branch_id",
+				"type": "varchar"
+			},
+			{
+				"name": "sanction_date",
+				"type": "date"
+			},
+			{
+				"name": "disbursement_date",
+				"type": "date"
+			},
+			{
+				"name": "maturity_date",
+				"type": "date"
+			},
+			{
+				"name": "principal_amount",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "outstanding_amount",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "interest_rate",
+				"type": "decimal",
+				"precision": 5,
+				"scale": 2
+			},
+			{
+				"name": "tenure_months",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "emi_amount",
+				"type": "decimal",
+				"precision": 12,
+				"scale": 2
+			},
+			{
+				"name": "emi_due_date",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "total_emis_paid",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "emis_overdue",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "overdue_category",
+				"type": "varchar"
+			},
+			{
+				"name": "collateral_type",
+				"type": "varchar"
+			},
+			{
+				"name": "collateral_value",
+				"type": "decimal",
+				"precision": 14,
+				"scale": 2
+			},
+			{
+				"name": "loan_status",
+				"type": "varchar"
+			},
+			{
+				"name": "loan_officer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "is_npa",
+				"type": "bit"
+			},
+			{
+				"name": "insurance_linked_flag",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "fact_loans"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

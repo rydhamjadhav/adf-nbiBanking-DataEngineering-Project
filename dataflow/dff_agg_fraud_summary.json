@@ -1,0 +1,96 @@
+{
+	"name": "dff_agg_fraud_summary",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Dim_fact_fraud_alerts",
+						"type": "DatasetReference"
+					},
+					"name": "sourcefraudalerts"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "agg_fraud_summary",
+						"type": "DatasetReference"
+					},
+					"name": "sinkfraudsummary"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedfraudmonth"
+				},
+				{
+					"name": "aggregatefraudsummary"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          alert_id as string,",
+				"          transaction_id as string,",
+				"          account_number as string,",
+				"          customer_id as string,",
+				"          alert_type as string,",
+				"          severity as string,",
+				"          alert_raised_date as date,",
+				"          alert_raised_time as string,",
+				"          alert_status as string,",
+				"          assigned_to as string,",
+				"          unassigned_flag as boolean,",
+				"          resolution as string,",
+				"          resolved_date as date,",
+				"          resolution_days as integer,",
+				"          amount_at_risk as decimal(14,2),",
+				"          is_confirmed_fraud as boolean,",
+				"          sar_filed as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcefraudalerts",
+				"sourcefraudalerts derive({alertmonth } = month(alert_raised_date),",
+				"          alertyear = year(alert_raised_date)) ~> derivedfraudmonth",
+				"derivedfraudmonth aggregate(groupBy(severity,",
+				"          {alertmonth },",
+				"          alertyear),",
+				"     {alertcount         } = count(alert_id),",
+				"          confirmedfraud = sum(toInteger(toString(is_confirmed_fraud))),",
+				"          totalamountatrisk = sum(toDouble(amount_at_risk)),",
+				"          avgresolutiondays = avg(toDouble(iifNull(resolution_days, 0)))) ~> aggregatefraudsummary",
+				"aggregatefraudsummary sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          agg_id as integer,",
+				"          alert_year as integer,",
+				"          alert_month as integer,",
+				"          severity as string,",
+				"          total_alerts_raised as integer,",
+				"          confirmed_fraud_count as integer,",
+				"          unassigned_alert_count as integer,",
+				"          sar_filed_count as integer,",
+				"          total_amount_at_risk as decimal(16,2),",
+				"          avg_resolution_days as decimal(6,1)",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     truncate:true,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          alert_year = alertyear,",
+				"          alert_month = {alertmonth },",
+				"          severity",
+				"     )) ~> sinkfraudsummary"
+			]
+		}
+	}
+}

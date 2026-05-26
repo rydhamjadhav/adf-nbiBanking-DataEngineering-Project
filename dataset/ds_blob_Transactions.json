@@ -1,0 +1,99 @@
+{
+	"name": "ds_blob_Transactions",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_source",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Blob_json"
+		},
+		"annotations": [],
+		"type": "Json",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "bank_transactions.json",
+				"folderPath": "Transactions.json",
+				"container": "source-data"
+			}
+		},
+		"schema": {
+			"type": "object",
+			"properties": {
+				"transaction_id": {
+					"type": "string"
+				},
+				"account_number": {
+					"type": "string"
+				},
+				"transaction_date": {
+					"type": "string"
+				},
+				"transaction_time": {
+					"type": "string"
+				},
+				"transaction_type": {
+					"type": "string"
+				},
+				"transaction_mode": {
+					"type": "string"
+				},
+				"category": {
+					"type": "string"
+				},
+				"channel": {
+					"type": "string"
+				},
+				"amount": {
+					"type": "number"
+				},
+				"currency": {
+					"type": "string"
+				},
+				"status": {
+					"type": "string"
+				},
+				"beneficiary_account": {
+					"type": "string"
+				},
+				"beneficiary_name": {
+					"type": "string"
+				},
+				"reference_number": {
+					"type": "string"
+				},
+				"narration": {
+					"type": "string"
+				},
+				"balance_after_txn": {
+					"type": "number"
+				},
+				"is_suspicious": {
+					"type": "integer"
+				},
+				"metadata": {
+					"type": "object",
+					"properties": {
+						"device_id": {
+							"type": "string"
+						},
+						"ip_address": {
+							"type": "string"
+						},
+						"location_city": {
+							"type": "string"
+						},
+						"processing_bank": {
+							"type": "string"
+						},
+						"batch_id": {
+							"type": "string"
+						}
+					}
+				}
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

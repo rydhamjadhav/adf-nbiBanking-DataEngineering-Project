@@ -1,0 +1,100 @@
+{
+	"name": "ds_blob_Employee",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_blob_source",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "Blob_csv"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "Employees.csv",
+				"container": "source-data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "employee_id",
+				"type": "String"
+			},
+			{
+				"name": "first_name",
+				"type": "String"
+			},
+			{
+				"name": "last_name",
+				"type": "String"
+			},
+			{
+				"name": "email",
+				"type": "String"
+			},
+			{
+				"name": "mobile",
+				"type": "String"
+			},
+			{
+				"name": "department",
+				"type": "String"
+			},
+			{
+				"name": "designation",
+				"type": "String"
+			},
+			{
+				"name": "branch_id",
+				"type": "String"
+			},
+			{
+				"name": "city",
+				"type": "String"
+			},
+			{
+				"name": "date_of_joining",
+				"type": "String"
+			},
+			{
+				"name": "date_of_birth",
+				"type": "String"
+			},
+			{
+				"name": "education",
+				"type": "String"
+			},
+			{
+				"name": "certifications",
+				"type": "String"
+			},
+			{
+				"name": "base_salary",
+				"type": "String"
+			},
+			{
+				"name": "performance_rating",
+				"type": "String"
+			},
+			{
+				"name": "manager_id",
+				"type": "String"
+			},
+			{
+				"name": "is_active",
+				"type": "String"
+			},
+			{
+				"name": "total_customers_managed",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

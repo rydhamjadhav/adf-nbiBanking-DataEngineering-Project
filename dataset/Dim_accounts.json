@@ -1,0 +1,82 @@
+{
+	"name": "Dim_accounts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sql_dw",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "SQL_Detaset"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "account_number",
+				"type": "varchar"
+			},
+			{
+				"name": "customer_id",
+				"type": "varchar"
+			},
+			{
+				"name": "account_type",
+				"type": "varchar"
+			},
+			{
+				"name": "branch_id",
+				"type": "varchar"
+			},
+			{
+				"name": "open_date",
+				"type": "date"
+			},
+			{
+				"name": "close_date",
+				"type": "date"
+			},
+			{
+				"name": "status",
+				"type": "varchar"
+			},
+			{
+				"name": "currency",
+				"type": "varchar"
+			},
+			{
+				"name": "interest_rate",
+				"type": "decimal",
+				"precision": 5,
+				"scale": 2
+			},
+			{
+				"name": "is_joint_account",
+				"type": "bit"
+			},
+			{
+				"name": "minimum_balance",
+				"type": "decimal",
+				"precision": 10,
+				"scale": 2
+			},
+			{
+				"name": "nominee_name",
+				"type": "varchar"
+			},
+			{
+				"name": "missing_nominee_flag",
+				"type": "bit"
+			},
+			{
+				"name": "account_age_years",
+				"type": "int",
+				"precision": 10
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "dim_accounts"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
