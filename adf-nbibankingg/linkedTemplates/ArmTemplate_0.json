@@ -1,0 +1,1626 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-nbibankingg"
+		},
+		"ls_blob_source_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'ls_blob_source'"
+		},
+		"ls_sql_dw_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'ls_sql_dw'"
+		},
+		"ls_key_vault_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://kv-nbi-banking.vault.azure.net/"
+		},
+		"ls_sql_dw_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "db-nbi-dw.database.windows.net"
+		},
+		"ls_sql_dw_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "sqldb-nbi-dw"
+		},
+		"ls_sql_dw_properties_typeProperties_userName": {
+			"type": "string",
+			"defaultValue": "SQLAdmin"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_blob_source')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('ls_blob_source_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_key_vault')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('ls_key_vault_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_sql_dw')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"server": "[parameters('ls_sql_dw_properties_typeProperties_server')]",
+					"database": "[parameters('ls_sql_dw_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SQL",
+					"userName": "[parameters('ls_sql_dw_properties_typeProperties_userName')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('ls_sql_dw_password')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_accounts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "account_number",
+						"type": "varchar"
+					},
+					{
+						"name": "customer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "account_type",
+						"type": "varchar"
+					},
+					{
+						"name": "branch_id",
+						"type": "varchar"
+					},
+					{
+						"name": "open_date",
+						"type": "date"
+					},
+					{
+						"name": "close_date",
+						"type": "date"
+					},
+					{
+						"name": "status",
+						"type": "varchar"
+					},
+					{
+						"name": "currency",
+						"type": "varchar"
+					},
+					{
+						"name": "interest_rate",
+						"type": "decimal",
+						"precision": 5,
+						"scale": 2
+					},
+					{
+						"name": "is_joint_account",
+						"type": "bit"
+					},
+					{
+						"name": "minimum_balance",
+						"type": "decimal",
+						"precision": 10,
+						"scale": 2
+					},
+					{
+						"name": "nominee_name",
+						"type": "varchar"
+					},
+					{
+						"name": "missing_nominee_flag",
+						"type": "bit"
+					},
+					{
+						"name": "account_age_years",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "dim_accounts"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_branches')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "branch_id",
+						"type": "varchar"
+					},
+					{
+						"name": "city",
+						"type": "varchar"
+					},
+					{
+						"name": "state",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "dim_branches"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_customers')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "customer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "first_name",
+						"type": "varchar"
+					},
+					{
+						"name": "last_name",
+						"type": "varchar"
+					},
+					{
+						"name": "date_of_birth",
+						"type": "date"
+					},
+					{
+						"name": "gender",
+						"type": "varchar"
+					},
+					{
+						"name": "email",
+						"type": "varchar"
+					},
+					{
+						"name": "mobile",
+						"type": "varchar"
+					},
+					{
+						"name": "city",
+						"type": "varchar"
+					},
+					{
+						"name": "state",
+						"type": "varchar"
+					},
+					{
+						"name": "pincode",
+						"type": "varchar"
+					},
+					{
+						"name": "customer_type",
+						"type": "varchar"
+					},
+					{
+						"name": "occupation",
+						"type": "varchar"
+					},
+					{
+						"name": "annual_income",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "kyc_status",
+						"type": "varchar"
+					},
+					{
+						"name": "registration_date",
+						"type": "date"
+					},
+					{
+						"name": "branch_id",
+						"type": "varchar"
+					},
+					{
+						"name": "relationship_manager_id",
+						"type": "varchar"
+					},
+					{
+						"name": "pan_number",
+						"type": "varchar"
+					},
+					{
+						"name": "credit_score",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "dim_customers"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_employees')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "employee_id",
+						"type": "varchar"
+					},
+					{
+						"name": "first_name",
+						"type": "varchar"
+					},
+					{
+						"name": "last_name",
+						"type": "varchar"
+					},
+					{
+						"name": "email",
+						"type": "varchar"
+					},
+					{
+						"name": "mobile",
+						"type": "varchar"
+					},
+					{
+						"name": "department",
+						"type": "varchar"
+					},
+					{
+						"name": "designation",
+						"type": "varchar"
+					},
+					{
+						"name": "branch_id",
+						"type": "varchar"
+					},
+					{
+						"name": "city",
+						"type": "varchar"
+					},
+					{
+						"name": "date_of_joining",
+						"type": "date"
+					},
+					{
+						"name": "date_of_birth",
+						"type": "date"
+					},
+					{
+						"name": "education",
+						"type": "varchar"
+					},
+					{
+						"name": "certifications",
+						"type": "varchar"
+					},
+					{
+						"name": "certification_count",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "base_salary",
+						"type": "decimal",
+						"precision": 12,
+						"scale": 2
+					},
+					{
+						"name": "performance_rating",
+						"type": "decimal",
+						"precision": 3,
+						"scale": 1
+					},
+					{
+						"name": "manager_id",
+						"type": "varchar"
+					},
+					{
+						"name": "is_active",
+						"type": "bit"
+					},
+					{
+						"name": "total_customers_managed",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "is_manager",
+						"type": "bit"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "dim_employees"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_fact_fraud_alerts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "alert_id",
+						"type": "varchar"
+					},
+					{
+						"name": "transaction_id",
+						"type": "varchar"
+					},
+					{
+						"name": "account_number",
+						"type": "varchar"
+					},
+					{
+						"name": "customer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "alert_type",
+						"type": "varchar"
+					},
+					{
+						"name": "severity",
+						"type": "varchar"
+					},
+					{
+						"name": "alert_raised_date",
+						"type": "date"
+					},
+					{
+						"name": "alert_raised_time",
+						"type": "varchar"
+					},
+					{
+						"name": "alert_status",
+						"type": "varchar"
+					},
+					{
+						"name": "assigned_to",
+						"type": "varchar"
+					},
+					{
+						"name": "unassigned_flag",
+						"type": "bit"
+					},
+					{
+						"name": "resolution",
+						"type": "varchar"
+					},
+					{
+						"name": "resolved_date",
+						"type": "date"
+					},
+					{
+						"name": "resolution_days",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "amount_at_risk",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "is_confirmed_fraud",
+						"type": "bit"
+					},
+					{
+						"name": "sar_filed",
+						"type": "bit"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "fact_fraud_alerts"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_fact_loans')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "loan_id",
+						"type": "varchar"
+					},
+					{
+						"name": "customer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "loan_type",
+						"type": "varchar"
+					},
+					{
+						"name": "branch_id",
+						"type": "varchar"
+					},
+					{
+						"name": "sanction_date",
+						"type": "date"
+					},
+					{
+						"name": "disbursement_date",
+						"type": "date"
+					},
+					{
+						"name": "maturity_date",
+						"type": "date"
+					},
+					{
+						"name": "principal_amount",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "outstanding_amount",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "interest_rate",
+						"type": "decimal",
+						"precision": 5,
+						"scale": 2
+					},
+					{
+						"name": "tenure_months",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "emi_amount",
+						"type": "decimal",
+						"precision": 12,
+						"scale": 2
+					},
+					{
+						"name": "emi_due_date",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_emis_paid",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "emis_overdue",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "overdue_category",
+						"type": "varchar"
+					},
+					{
+						"name": "collateral_type",
+						"type": "varchar"
+					},
+					{
+						"name": "collateral_value",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "loan_status",
+						"type": "varchar"
+					},
+					{
+						"name": "loan_officer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "is_npa",
+						"type": "bit"
+					},
+					{
+						"name": "insurance_linked_flag",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "fact_loans"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_fact_transactions')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "transaction_id",
+						"type": "varchar"
+					},
+					{
+						"name": "account_number",
+						"type": "varchar"
+					},
+					{
+						"name": "transaction_date",
+						"type": "date"
+					},
+					{
+						"name": "transaction_time",
+						"type": "time",
+						"scale": 7
+					},
+					{
+						"name": "transaction_type",
+						"type": "varchar"
+					},
+					{
+						"name": "transaction_mode",
+						"type": "varchar"
+					},
+					{
+						"name": "category",
+						"type": "varchar"
+					},
+					{
+						"name": "channel",
+						"type": "varchar"
+					},
+					{
+						"name": "amount",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "currency",
+						"type": "varchar"
+					},
+					{
+						"name": "status",
+						"type": "varchar"
+					},
+					{
+						"name": "beneficiary_account",
+						"type": "varchar"
+					},
+					{
+						"name": "beneficiary_name",
+						"type": "varchar"
+					},
+					{
+						"name": "reference_number",
+						"type": "varchar"
+					},
+					{
+						"name": "narration",
+						"type": "varchar"
+					},
+					{
+						"name": "balance_after_txn",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "is_suspicious",
+						"type": "bit"
+					},
+					{
+						"name": "is_internal_transfer",
+						"type": "bit"
+					},
+					{
+						"name": "meta_device_id",
+						"type": "varchar"
+					},
+					{
+						"name": "meta_ip_address",
+						"type": "varchar"
+					},
+					{
+						"name": "meta_location_city",
+						"type": "varchar"
+					},
+					{
+						"name": "meta_processing_bank",
+						"type": "varchar"
+					},
+					{
+						"name": "meta_batch_id",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "fact_transactions"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_factaccount_balances')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "balance_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "account_number",
+						"type": "varchar"
+					},
+					{
+						"name": "customer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "account_type",
+						"type": "varchar"
+					},
+					{
+						"name": "status",
+						"type": "varchar"
+					},
+					{
+						"name": "current_balance",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "available_balance",
+						"type": "decimal",
+						"precision": 14,
+						"scale": 2
+					},
+					{
+						"name": "currency",
+						"type": "varchar"
+					},
+					{
+						"name": "snapshot_date",
+						"type": "date"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "fact_account_balances"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Dim_loan_types')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "loan_type_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "loan_type",
+						"type": "varchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "dim_loan_types"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/agg_branch_performance')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "agg_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "branch_id",
+						"type": "varchar"
+					},
+					{
+						"name": "city",
+						"type": "varchar"
+					},
+					{
+						"name": "total_accounts_opened",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_active_accounts",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_loan_amount_disbursed",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "total_active_loans",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_transactions",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_transaction_value",
+						"type": "decimal",
+						"precision": 18,
+						"scale": 2
+					},
+					{
+						"name": "avg_customer_credit_score",
+						"type": "decimal",
+						"precision": 6,
+						"scale": 1
+					},
+					{
+						"name": "total_npa_loans",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "agg_branch_performance"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/agg_customer_360')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "customer_id",
+						"type": "varchar"
+					},
+					{
+						"name": "full_name",
+						"type": "varchar"
+					},
+					{
+						"name": "city",
+						"type": "varchar"
+					},
+					{
+						"name": "kyc_status",
+						"type": "varchar"
+					},
+					{
+						"name": "credit_score",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "customer_type",
+						"type": "varchar"
+					},
+					{
+						"name": "total_accounts_held",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_active_accounts",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_loans",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_outstanding_loan_amt",
+						"type": "decimal",
+						"precision": 16,
+						"scale": 2
+					},
+					{
+						"name": "total_npa_loans",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "txn_value_last_12_months",
+						"type": "decimal",
+						"precision": 16,
+						"scale": 2
+					},
+					{
+						"name": "txn_count_last_12_months",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "last_transaction_date",
+						"type": "date"
+					},
+					{
+						"name": "total_fraud_alerts",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "confirmed_fraud_count",
+						"type": "int",
+						"precision": 10
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "agg_customer_360"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/agg_fraud_summary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_sql_dw",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "SQL_Detaset"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [
+					{
+						"name": "agg_id",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "alert_year",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "alert_month",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "severity",
+						"type": "varchar"
+					},
+					{
+						"name": "total_alerts_raised",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "confirmed_fraud_count",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "unassigned_alert_count",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "sar_filed_count",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "total_amount_at_risk",
+						"type": "decimal",
+						"precision": 16,
+						"scale": 2
+					},
+					{
+						"name": "avg_resolution_days",
+						"type": "decimal",
+						"precision": 6,
+						"scale": 1
+					}
+				],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "agg_fraud_summary"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_sql_dw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_blob_Account')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_source",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Blob_csv"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "bank_accounts.csv",
+						"folderPath": "Accounts.csv",
+						"container": "source-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "account_number",
+						"type": "String"
+					},
+					{
+						"name": "customer_id",
+						"type": "String"
+					},
+					{
+						"name": "account_type",
+						"type": "String"
+					},
+					{
+						"name": "branch_id",
+						"type": "String"
+					},
+					{
+						"name": "open_date",
+						"type": "String"
+					},
+					{
+						"name": "close_date",
+						"type": "String"
+					},
+					{
+						"name": "status",
+						"type": "String"
+					},
+					{
+						"name": "current_balance",
+						"type": "String"
+					},
+					{
+						"name": "available_balance",
+						"type": "String"
+					},
+					{
+						"name": "currency",
+						"type": "String"
+					},
+					{
+						"name": "interest_rate",
+						"type": "String"
+					},
+					{
+						"name": "nominee_name",
+						"type": "String"
+					},
+					{
+						"name": "is_joint_account",
+						"type": "String"
+					},
+					{
+						"name": "minimum_balance",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_source')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_blob_Customer')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_source",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Blob_csv"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "Customer.csv",
+						"container": "source-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "customer_id",
+						"type": "String"
+					},
+					{
+						"name": "first_name",
+						"type": "String"
+					},
+					{
+						"name": "last_name",
+						"type": "String"
+					},
+					{
+						"name": "date_of_birth",
+						"type": "String"
+					},
+					{
+						"name": "gender",
+						"type": "String"
+					},
+					{
+						"name": "email",
+						"type": "String"
+					},
+					{
+						"name": "mobile",
+						"type": "String"
+					},
+					{
+						"name": "city",
+						"type": "String"
+					},
+					{
+						"name": "state",
+						"type": "String"
+					},
+					{
+						"name": "pincode",
+						"type": "String"
+					},
+					{
+						"name": "customer_type",
+						"type": "String"
+					},
+					{
+						"name": "occupation",
+						"type": "String"
+					},
+					{
+						"name": "annual_income",
+						"type": "String"
+					},
+					{
+						"name": "kyc_status",
+						"type": "String"
+					},
+					{
+						"name": "registration_date",
+						"type": "String"
+					},
+					{
+						"name": "branch_id",
+						"type": "String"
+					},
+					{
+						"name": "relationship_manager_id",
+						"type": "String"
+					},
+					{
+						"name": "is_active",
+						"type": "String"
+					},
+					{
+						"name": "pan_number",
+						"type": "String"
+					},
+					{
+						"name": "credit_score",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_source')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_blob_Employee')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_source",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Blob_csv"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"folderPath": "Employees.csv",
+						"container": "source-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "employee_id",
+						"type": "String"
+					},
+					{
+						"name": "first_name",
+						"type": "String"
+					},
+					{
+						"name": "last_name",
+						"type": "String"
+					},
+					{
+						"name": "email",
+						"type": "String"
+					},
+					{
+						"name": "mobile",
+						"type": "String"
+					},
+					{
+						"name": "department",
+						"type": "String"
+					},
+					{
+						"name": "designation",
+						"type": "String"
+					},
+					{
+						"name": "branch_id",
+						"type": "String"
+					},
+					{
+						"name": "city",
+						"type": "String"
+					},
+					{
+						"name": "date_of_joining",
+						"type": "String"
+					},
+					{
+						"name": "date_of_birth",
+						"type": "String"
+					},
+					{
+						"name": "education",
+						"type": "String"
+					},
+					{
+						"name": "certifications",
+						"type": "String"
+					},
+					{
+						"name": "base_salary",
+						"type": "String"
+					},
+					{
+						"name": "performance_rating",
+						"type": "String"
+					},
+					{
+						"name": "manager_id",
+						"type": "String"
+					},
+					{
+						"name": "is_active",
+						"type": "String"
+					},
+					{
+						"name": "total_customers_managed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_source')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_blob_Fraud_alerts')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_source",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Blob_csv"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "bank_fraud_alerts.csv",
+						"folderPath": "Bank_fraud_alerts.csv",
+						"container": "source-data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "alert_id",
+						"type": "String"
+					},
+					{
+						"name": "transaction_id",
+						"type": "String"
+					},
+					{
+						"name": "account_number",
+						"type": "String"
+					},
+					{
+						"name": "customer_id",
+						"type": "String"
+					},
+					{
+						"name": "alert_type",
+						"type": "String"
+					},
+					{
+						"name": "severity",
+						"type": "String"
+					},
+					{
+						"name": "alert_raised_date",
+						"type": "String"
+					},
+					{
+						"name": "alert_raised_time",
+						"type": "String"
+					},
+					{
+						"name": "alert_status",
+						"type": "String"
+					},
+					{
+						"name": "assigned_to",
+						"type": "String"
+					},
+					{
+						"name": "resolution",
+						"type": "String"
+					},
+					{
+						"name": "resolved_date",
+						"type": "String"
+					},
+					{
+						"name": "resolution_days",
+						"type": "String"
+					},
+					{
+						"name": "amount_at_risk",
+						"type": "String"
+					},
+					{
+						"name": "is_confirmed_fraud",
+						"type": "String"
+					},
+					{
+						"name": "sar_filed",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_source')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_blob_Json')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_source",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Blob_json"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "bank_loans.json",
+						"folderPath": "Loans.json",
+						"container": "source-data"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"loan_id": {
+							"type": "string"
+						},
+						"customer_id": {
+							"type": "string"
+						},
+						"loan_type": {
+							"type": "string"
+						},
+						"branch_id": {
+							"type": "string"
+						},
+						"sanction_date": {
+							"type": "string"
+						},
+						"disbursement_date": {
+							"type": "string"
+						},
+						"maturity_date": {
+							"type": "string"
+						},
+						"principal_amount": {
+							"type": "number"
+						},
+						"outstanding_amount": {
+							"type": "number"
+						},
+						"interest_rate": {
+							"type": "number"
+						},
+						"tenure_months": {
+							"type": "integer"
+						},
+						"emi_amount": {
+							"type": "number"
+						},
+						"emi_due_date": {
+							"type": "integer"
+						},
+						"total_emis_paid": {
+							"type": "integer"
+						},
+						"emis_overdue": {
+							"type": "integer"
+						},
+						"collateral_type": {
+							"type": "string"
+						},
+						"collateral_value": {
+							"type": "number"
+						},
+						"loan_status": {
+							"type": "string"
+						},
+						"loan_officer_id": {
+							"type": "string"
+						},
+						"is_npa": {
+							"type": "integer"
+						},
+						"insurance_linked": {
+							"type": "boolean"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_blob_source')]"
+			]
+		}
+	]
+}

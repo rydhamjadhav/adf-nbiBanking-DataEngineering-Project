@@ -1,0 +1,27 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "adf-nbibankingg"
+		},
+		"ls_blob_source_connectionString": {
+			"value": ""
+		},
+		"ls_sql_dw_password": {
+			"value": ""
+		},
+		"ls_key_vault_properties_typeProperties_baseUrl": {
+			"value": "https://kv-nbi-banking.vault.azure.net/"
+		},
+		"ls_sql_dw_properties_typeProperties_server": {
+			"value": "db-nbi-dw.database.windows.net"
+		},
+		"ls_sql_dw_properties_typeProperties_database": {
+			"value": "sqldb-nbi-dw"
+		},
+		"ls_sql_dw_properties_typeProperties_userName": {
+			"value": "SQLAdmin"
+		}
+	}
+}

@@ -1,0 +1,2257 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-nbibankingg"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_blob_Transactions')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_blob_source",
+					"type": "LinkedServiceReference"
+				},
+				"folder": {
+					"name": "Blob_json"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "bank_transactions.json",
+						"folderPath": "Transactions.json",
+						"container": "source-data"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"transaction_id": {
+							"type": "string"
+						},
+						"account_number": {
+							"type": "string"
+						},
+						"transaction_date": {
+							"type": "string"
+						},
+						"transaction_time": {
+							"type": "string"
+						},
+						"transaction_type": {
+							"type": "string"
+						},
+						"transaction_mode": {
+							"type": "string"
+						},
+						"category": {
+							"type": "string"
+						},
+						"channel": {
+							"type": "string"
+						},
+						"amount": {
+							"type": "number"
+						},
+						"currency": {
+							"type": "string"
+						},
+						"status": {
+							"type": "string"
+						},
+						"beneficiary_account": {
+							"type": "string"
+						},
+						"beneficiary_name": {
+							"type": "string"
+						},
+						"reference_number": {
+							"type": "string"
+						},
+						"narration": {
+							"type": "string"
+						},
+						"balance_after_txn": {
+							"type": "number"
+						},
+						"is_suspicious": {
+							"type": "integer"
+						},
+						"metadata": {
+							"type": "object",
+							"properties": {
+								"device_id": {
+									"type": "string"
+								},
+								"ip_address": {
+									"type": "string"
+								},
+								"location_city": {
+									"type": "string"
+								},
+								"processing_bank": {
+									"type": "string"
+								},
+								"batch_id": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_agg_branch_performance')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dim_accounts",
+								"type": "DatasetReference"
+							},
+							"name": "sourcedimaccounts"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_loans",
+								"type": "DatasetReference"
+							},
+							"name": "sourcefactloans"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_transactions",
+								"type": "DatasetReference"
+							},
+							"name": "sourcefacttransactions"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dim_customers",
+								"type": "DatasetReference"
+							},
+							"name": "sourcedimcustomers"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "agg_branch_performance",
+								"type": "DatasetReference"
+							},
+							"name": "sinkbranchperformance"
+						}
+					],
+					"transformations": [
+						{
+							"name": "joincustomeraccount"
+						},
+						{
+							"name": "joinloans"
+						},
+						{
+							"name": "jointransactions"
+						},
+						{
+							"name": "aggregatebranch"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          branch_id as string,",
+						"          open_date as date,",
+						"          close_date as date,",
+						"          status as string,",
+						"          currency as string,",
+						"          interest_rate as decimal(5,2),",
+						"          is_joint_account as boolean,",
+						"          minimum_balance as decimal(10,2),",
+						"          nominee_name as string,",
+						"          missing_nominee_flag as boolean,",
+						"          account_age_years as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcedimaccounts",
+						"source(output(",
+						"          loan_id as string,",
+						"          customer_id as string,",
+						"          loan_type as string,",
+						"          branch_id as string,",
+						"          sanction_date as date,",
+						"          disbursement_date as date,",
+						"          maturity_date as date,",
+						"          principal_amount as decimal(14,2),",
+						"          outstanding_amount as decimal(14,2),",
+						"          interest_rate as decimal(5,2),",
+						"          tenure_months as integer,",
+						"          emi_amount as decimal(12,2),",
+						"          emi_due_date as integer,",
+						"          total_emis_paid as integer,",
+						"          emis_overdue as integer,",
+						"          overdue_category as string,",
+						"          collateral_type as string,",
+						"          collateral_value as decimal(14,2),",
+						"          loan_status as string,",
+						"          loan_officer_id as string,",
+						"          is_npa as boolean,",
+						"          insurance_linked_flag as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcefactloans",
+						"source(output(",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          transaction_date as date,",
+						"          transaction_time as timestamp,",
+						"          transaction_type as string,",
+						"          transaction_mode as string,",
+						"          category as string,",
+						"          channel as string,",
+						"          amount as decimal(14,2),",
+						"          currency as string,",
+						"          status as string,",
+						"          beneficiary_account as string,",
+						"          beneficiary_name as string,",
+						"          reference_number as string,",
+						"          narration as string,",
+						"          balance_after_txn as decimal(14,2),",
+						"          is_suspicious as boolean,",
+						"          is_internal_transfer as boolean,",
+						"          meta_device_id as string,",
+						"          meta_ip_address as string,",
+						"          meta_location_city as string,",
+						"          meta_processing_bank as string,",
+						"          meta_batch_id as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcefacttransactions",
+						"source(output(",
+						"          customer_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          date_of_birth as date,",
+						"          gender as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          city as string,",
+						"          state as string,",
+						"          pincode as string,",
+						"          customer_type as string,",
+						"          occupation as string,",
+						"          annual_income as decimal(14,2),",
+						"          kyc_status as string,",
+						"          registration_date as date,",
+						"          branch_id as string,",
+						"          relationship_manager_id as string,",
+						"          pan_number as string,",
+						"          credit_score as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcedimcustomers",
+						"sourcedimaccounts, sourcedimcustomers join(sourcedimaccounts@branch_id == sourcedimcustomers@branch_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joincustomeraccount",
+						"joincustomeraccount, sourcefactloans join(sourcedimaccounts@branch_id == sourcefactloans@branch_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinloans",
+						"joinloans, sourcefacttransactions join(sourcedimaccounts@account_number == sourcefacttransactions@account_number,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> jointransactions",
+						"jointransactions aggregate(groupBy(sourcedimaccounts@branch_id),",
+						"     {totalaccountsopened } = countIf(!isNull(sourcedimaccounts@account_number)),",
+						"          {totalloanamount     } = sum(principal_amount),",
+						"          {totaltransactions   } = count(transaction_id),",
+						"          {avgcreditscore      } = avg(credit_score)) ~> aggregatebranch",
+						"aggregatebranch sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          agg_id as integer,",
+						"          branch_id as string,",
+						"          city as string,",
+						"          total_accounts_opened as integer,",
+						"          total_active_accounts as integer,",
+						"          total_loan_amount_disbursed as decimal(18,2),",
+						"          total_active_loans as integer,",
+						"          total_transactions as integer,",
+						"          total_transaction_value as decimal(18,2),",
+						"          avg_customer_credit_score as decimal(6,1),",
+						"          total_npa_loans as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkbranchperformance"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_dim_account')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Account",
+								"type": "DatasetReference"
+							},
+							"name": "accountsource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_accounts",
+								"type": "DatasetReference"
+							},
+							"name": "sinkaccounts"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedaccounts"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          branch_id as string,",
+						"          open_date as string,",
+						"          close_date as string,",
+						"          status as string,",
+						"          current_balance as string,",
+						"          available_balance as string,",
+						"          currency as string,",
+						"          interest_rate as string,",
+						"          nominee_name as string,",
+						"          is_joint_account as string,",
+						"          minimum_balance as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> accountsource",
+						"accountsource derive(account_age_years = year(currentDate()) - year(toDate(open_date, 'yyyy-MM-dd')),",
+						"          missing_nominee_flag = iif(isNull(nominee_name), 1, 0)) ~> derivedaccounts",
+						"derivedaccounts sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          branch_id as string,",
+						"          open_date as date,",
+						"          close_date as date,",
+						"          status as string,",
+						"          currency as string,",
+						"          interest_rate as decimal(5,2),",
+						"          is_joint_account as boolean,",
+						"          minimum_balance as decimal(10,2),",
+						"          nominee_name as string,",
+						"          missing_nominee_flag as boolean,",
+						"          account_age_years as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkaccounts"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_dim_branches')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Customer",
+								"type": "DatasetReference"
+							},
+							"name": "customersbranch"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Account",
+								"type": "DatasetReference"
+							},
+							"name": "accountsbranch"
+						},
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "employeesbranch"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_branches",
+								"type": "DatasetReference"
+							},
+							"name": "sinkbranches"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						},
+						{
+							"name": "accountsbranches"
+						},
+						{
+							"name": "selectemployees"
+						},
+						{
+							"name": "unionbranches"
+						},
+						{
+							"name": "aggregatebranches"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          customer_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          date_of_birth as string,",
+						"          gender as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          city as string,",
+						"          state as string,",
+						"          pincode as string,",
+						"          customer_type as string,",
+						"          occupation as string,",
+						"          annual_income as string,",
+						"          kyc_status as string,",
+						"          registration_date as string,",
+						"          branch_id as string,",
+						"          relationship_manager_id as string,",
+						"          is_active as string,",
+						"          pan_number as string,",
+						"          credit_score as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> customersbranch",
+						"source(output(",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          branch_id as string,",
+						"          open_date as string,",
+						"          close_date as string,",
+						"          status as string,",
+						"          current_balance as string,",
+						"          available_balance as string,",
+						"          currency as string,",
+						"          interest_rate as string,",
+						"          nominee_name as string,",
+						"          is_joint_account as string,",
+						"          minimum_balance as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> accountsbranch",
+						"source(output(",
+						"          employee_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          department as string,",
+						"          designation as string,",
+						"          branch_id as string,",
+						"          city as string,",
+						"          date_of_joining as string,",
+						"          date_of_birth as string,",
+						"          education as string,",
+						"          certifications as string,",
+						"          base_salary as string,",
+						"          performance_rating as string,",
+						"          manager_id as string,",
+						"          is_active as string,",
+						"          total_customers_managed as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> employeesbranch",
+						"customersbranch select(mapColumn(",
+						"          city,",
+						"          state,",
+						"          branch_id",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"accountsbranch select(mapColumn(",
+						"          account_number,",
+						"          customer_id,",
+						"          account_type,",
+						"          branch_id,",
+						"          open_date,",
+						"          close_date,",
+						"          status,",
+						"          current_balance,",
+						"          available_balance,",
+						"          currency,",
+						"          interest_rate,",
+						"          nominee_name,",
+						"          is_joint_account,",
+						"          minimum_balance",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> accountsbranches",
+						"employeesbranch select(mapColumn(",
+						"          branch_id,",
+						"          city",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectemployees",
+						"select1, accountsbranches, selectemployees union(byName: true)~> unionbranches",
+						"unionbranches aggregate(groupBy(branch_id),",
+						"     city = first(city),",
+						"          state = first(state)) ~> aggregatebranches",
+						"aggregatebranches sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          branch_id as string,",
+						"          city as string,",
+						"          state as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkbranches"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_dim_customer')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Customer",
+								"type": "DatasetReference"
+							},
+							"name": "sourcecustomers"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_customers",
+								"type": "DatasetReference"
+							},
+							"name": "sinkcustomers"
+						}
+					],
+					"transformations": [
+						{
+							"name": "filteractive"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          customer_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          date_of_birth as string,",
+						"          gender as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          city as string,",
+						"          state as string,",
+						"          pincode as string,",
+						"          customer_type as string,",
+						"          occupation as string,",
+						"          annual_income as string,",
+						"          kyc_status as string,",
+						"          registration_date as string,",
+						"          branch_id as string,",
+						"          relationship_manager_id as string,",
+						"          is_active as string,",
+						"          pan_number as string,",
+						"          credit_score as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> sourcecustomers",
+						"sourcecustomers filter(toInteger(is_active) == 1) ~> filteractive",
+						"filteractive sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          customer_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          date_of_birth as date,",
+						"          gender as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          city as string,",
+						"          state as string,",
+						"          pincode as string,",
+						"          customer_type as string,",
+						"          occupation as string,",
+						"          annual_income as decimal(14,2),",
+						"          kyc_status as string,",
+						"          registration_date as date,",
+						"          branch_id as string,",
+						"          relationship_manager_id as string,",
+						"          pan_number as string,",
+						"          credit_score as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          customer_id,",
+						"          first_name,",
+						"          last_name,",
+						"          date_of_birth,",
+						"          gender,",
+						"          email,",
+						"          mobile,",
+						"          city,",
+						"          state,",
+						"          pincode,",
+						"          customer_type,",
+						"          occupation,",
+						"          annual_income,",
+						"          kyc_status,",
+						"          registration_date,",
+						"          branch_id,",
+						"          relationship_manager_id,",
+						"          pan_number,",
+						"          credit_score",
+						"     )) ~> sinkcustomers"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_dim_employees')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Employee",
+								"type": "DatasetReference"
+							},
+							"name": "dfdimemployees"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_employees",
+								"type": "DatasetReference"
+							},
+							"name": "sinkemployees"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          employee_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          department as string,",
+						"          designation as string,",
+						"          branch_id as string,",
+						"          city as string,",
+						"          date_of_joining as string,",
+						"          date_of_birth as string,",
+						"          education as string,",
+						"          certifications as string,",
+						"          base_salary as string,",
+						"          performance_rating as string,",
+						"          manager_id as string,",
+						"          is_active as string,",
+						"          total_customers_managed as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> dfdimemployees",
+						"dfdimemployees derive(certification_count = iif(certifications == 'None', 0, size(split(certifications, ','))),",
+						"          is_manager = iif(isNull(manager_id), 0, 1)) ~> derivedColumn1",
+						"derivedColumn1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          employee_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          department as string,",
+						"          designation as string,",
+						"          branch_id as string,",
+						"          city as string,",
+						"          date_of_joining as date,",
+						"          date_of_birth as date,",
+						"          education as string,",
+						"          certifications as string,",
+						"          certification_count as integer,",
+						"          base_salary as decimal(12,2),",
+						"          performance_rating as decimal(3,1),",
+						"          manager_id as string,",
+						"          is_active as boolean,",
+						"          total_customers_managed as integer,",
+						"          is_manager as boolean",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkemployees"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_dim_loan_types')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Json",
+								"type": "DatasetReference"
+							},
+							"name": "loanssource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_loan_types",
+								"type": "DatasetReference"
+							},
+							"name": "sinkloantypes"
+						}
+					],
+					"transformations": [
+						{
+							"name": "selectloantype"
+						},
+						{
+							"name": "aggregateloantype"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          loan_id as string,",
+						"          customer_id as string,",
+						"          loan_type as string,",
+						"          branch_id as string,",
+						"          sanction_date as string,",
+						"          disbursement_date as string,",
+						"          maturity_date as string,",
+						"          principal_amount as double,",
+						"          outstanding_amount as double,",
+						"          interest_rate as double,",
+						"          tenure_months as integer,",
+						"          emi_amount as double,",
+						"          emi_due_date as integer,",
+						"          total_emis_paid as integer,",
+						"          emis_overdue as integer,",
+						"          collateral_type as string,",
+						"          collateral_value as double,",
+						"          loan_status as string,",
+						"          loan_officer_id as string,",
+						"          is_npa as integer,",
+						"          insurance_linked as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> loanssource",
+						"loanssource select(mapColumn(",
+						"          loan_type",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> selectloantype",
+						"selectloantype aggregate(groupBy(loan_type),",
+						"     {loan_type } = first(loan_type)) ~> aggregateloantype",
+						"aggregateloantype sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          loan_type_id as integer,",
+						"          loan_type as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkloantypes"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_fact_account_balances')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Account",
+								"type": "DatasetReference"
+							},
+							"name": "accountssource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_factaccount_balances",
+								"type": "DatasetReference"
+							},
+							"name": "sinkaccountbalances"
+						}
+					],
+					"transformations": [],
+					"scriptLines": [
+						"source(output(",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          branch_id as string,",
+						"          open_date as string,",
+						"          close_date as string,",
+						"          status as string,",
+						"          current_balance as string,",
+						"          available_balance as string,",
+						"          currency as string,",
+						"          interest_rate as string,",
+						"          nominee_name as string,",
+						"          is_joint_account as string,",
+						"          minimum_balance as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> accountssource",
+						"accountssource sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          balance_id as integer,",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          status as string,",
+						"          current_balance as decimal(14,2),",
+						"          available_balance as decimal(14,2),",
+						"          currency as string,",
+						"          snapshot_date as date",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkaccountbalances"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_fact_fraud_alerts')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Fraud_alerts",
+								"type": "DatasetReference"
+							},
+							"name": "fraudsource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_fraud_alerts",
+								"type": "DatasetReference"
+							},
+							"name": "sinkfraudalerts"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedfraudalerts"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          alert_id as string,",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          alert_type as string,",
+						"          severity as string,",
+						"          alert_raised_date as string,",
+						"          alert_raised_time as string,",
+						"          alert_status as string,",
+						"          assigned_to as string,",
+						"          resolution as string,",
+						"          resolved_date as string,",
+						"          resolution_days as string,",
+						"          amount_at_risk as string,",
+						"          is_confirmed_fraud as string,",
+						"          sar_filed as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> fraudsource",
+						"fraudsource derive({unassignedflag } = iif(isNull(assigned_to), 1, 0)) ~> derivedfraudalerts",
+						"derivedfraudalerts sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          alert_id as string,",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          alert_type as string,",
+						"          severity as string,",
+						"          alert_raised_date as date,",
+						"          alert_raised_time as string,",
+						"          alert_status as string,",
+						"          assigned_to as string,",
+						"          unassigned_flag as boolean,",
+						"          resolution as string,",
+						"          resolved_date as date,",
+						"          resolution_days as integer,",
+						"          amount_at_risk as decimal(14,2),",
+						"          is_confirmed_fraud as boolean,",
+						"          sar_filed as boolean",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          alert_id,",
+						"          transaction_id,",
+						"          account_number,",
+						"          customer_id,",
+						"          alert_type,",
+						"          severity,",
+						"          alert_raised_date,",
+						"          alert_raised_time,",
+						"          alert_status,",
+						"          assigned_to,",
+						"          unassigned_flag = {unassignedflag },",
+						"          resolution",
+						"     )) ~> sinkfraudalerts"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_fact_loans')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Json",
+								"type": "DatasetReference"
+							},
+							"name": "loanssource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_loans",
+								"type": "DatasetReference"
+							},
+							"name": "sinkloans"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedloans"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          loan_id as string,",
+						"          customer_id as string,",
+						"          loan_type as string,",
+						"          branch_id as string,",
+						"          sanction_date as string,",
+						"          disbursement_date as string,",
+						"          maturity_date as string,",
+						"          principal_amount as double,",
+						"          outstanding_amount as double,",
+						"          interest_rate as double,",
+						"          tenure_months as integer,",
+						"          emi_amount as double,",
+						"          emi_due_date as integer,",
+						"          total_emis_paid as integer,",
+						"          emis_overdue as integer,",
+						"          collateral_type as string,",
+						"          collateral_value as double,",
+						"          loan_status as string,",
+						"          loan_officer_id as string,",
+						"          is_npa as integer,",
+						"          insurance_linked as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> loanssource",
+						"loanssource derive({insurancelinkedflag } = iif(insurance_linked == true(), 'Yes', 'No'),",
+						"          {overduecategory } = iif(emis_overdue == 0, 'Current',   iif(emis_overdue <= 2, 'Special Mention',     iif(emis_overdue <= 4, 'Sub-Standard',       'Doubtful')))) ~> derivedloans",
+						"derivedloans sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          loan_id as string,",
+						"          customer_id as string,",
+						"          loan_type as string,",
+						"          branch_id as string,",
+						"          sanction_date as date,",
+						"          disbursement_date as date,",
+						"          maturity_date as date,",
+						"          principal_amount as decimal(14,2),",
+						"          outstanding_amount as decimal(14,2),",
+						"          interest_rate as decimal(5,2),",
+						"          tenure_months as integer,",
+						"          emi_amount as decimal(12,2),",
+						"          emi_due_date as integer,",
+						"          total_emis_paid as integer,",
+						"          emis_overdue as integer,",
+						"          overdue_category as string,",
+						"          collateral_type as string,",
+						"          collateral_value as decimal(14,2),",
+						"          loan_status as string,",
+						"          loan_officer_id as string,",
+						"          is_npa as boolean,",
+						"          insurance_linked_flag as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkloans"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/df_fact_transactions')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "ds_blob_Transactions",
+								"type": "DatasetReference"
+							},
+							"name": "transactionssource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_transactions",
+								"type": "DatasetReference"
+							},
+							"name": "sinktransactions"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedtransactions"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          transaction_date as string,",
+						"          transaction_time as string,",
+						"          transaction_type as string,",
+						"          transaction_mode as string,",
+						"          category as string,",
+						"          channel as string,",
+						"          amount as double,",
+						"          currency as string,",
+						"          status as string,",
+						"          beneficiary_account as string,",
+						"          beneficiary_name as string,",
+						"          reference_number as string,",
+						"          narration as string,",
+						"          balance_after_txn as double,",
+						"          is_suspicious as integer,",
+						"          metadata as (device_id as string, ip_address as string, location_city as string, processing_bank as string, batch_id as string)",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     documentForm: 'arrayOfDocuments') ~> transactionssource",
+						"transactionssource derive({isinternaltransfer } = iif(isNull(beneficiary_account), 1, 0),",
+						"          {metadeviceid } = metadata.device_id,",
+						"          transaction_date = iifNull(toDate(transaction_date, 'yyyy-MM-dd'), currentDate())) ~> derivedtransactions",
+						"derivedtransactions sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          transaction_date as date,",
+						"          transaction_time as timestamp,",
+						"          transaction_type as string,",
+						"          transaction_mode as string,",
+						"          category as string,",
+						"          channel as string,",
+						"          amount as decimal(14,2),",
+						"          currency as string,",
+						"          status as string,",
+						"          beneficiary_account as string,",
+						"          beneficiary_name as string,",
+						"          reference_number as string,",
+						"          narration as string,",
+						"          balance_after_txn as decimal(14,2),",
+						"          is_suspicious as boolean,",
+						"          is_internal_transfer as boolean,",
+						"          meta_device_id as string,",
+						"          meta_ip_address as string,",
+						"          meta_location_city as string,",
+						"          meta_processing_bank as string,",
+						"          meta_batch_id as string",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          transaction_id,",
+						"          account_number,",
+						"          transaction_date,",
+						"          transaction_time,",
+						"          transaction_type,",
+						"          transaction_mode,",
+						"          category,",
+						"          channel,",
+						"          amount,",
+						"          currency,",
+						"          status,",
+						"          beneficiary_account,",
+						"          beneficiary_name,",
+						"          reference_number,",
+						"          narration,",
+						"          balance_after_txn,",
+						"          is_suspicious,",
+						"          is_internal_transfer = {isinternaltransfer }",
+						"     )) ~> sinktransactions"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_blob_Transactions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dff_agg_customer360')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dim_customers",
+								"type": "DatasetReference"
+							},
+							"name": "sourcedimcustomers"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dim_accounts",
+								"type": "DatasetReference"
+							},
+							"name": "sourcedimaccounts"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_loans",
+								"type": "DatasetReference"
+							},
+							"name": "sourcefactloans"
+						},
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_transactions",
+								"type": "DatasetReference"
+							},
+							"name": "sourcefacttransactions"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "agg_customer_360",
+								"type": "DatasetReference"
+							},
+							"name": "sinkcustomer360"
+						}
+					],
+					"transformations": [
+						{
+							"name": "filterlast12months"
+						},
+						{
+							"name": "joincustomeraccount"
+						},
+						{
+							"name": "joinloans"
+						},
+						{
+							"name": "jointransactions"
+						},
+						{
+							"name": "aggregatecustomer360"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          customer_id as string,",
+						"          first_name as string,",
+						"          last_name as string,",
+						"          date_of_birth as date,",
+						"          gender as string,",
+						"          email as string,",
+						"          mobile as string,",
+						"          city as string,",
+						"          state as string,",
+						"          pincode as string,",
+						"          customer_type as string,",
+						"          occupation as string,",
+						"          annual_income as decimal(14,2),",
+						"          kyc_status as string,",
+						"          registration_date as date,",
+						"          branch_id as string,",
+						"          relationship_manager_id as string,",
+						"          pan_number as string,",
+						"          credit_score as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcedimcustomers",
+						"source(output(",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          account_type as string,",
+						"          branch_id as string,",
+						"          open_date as date,",
+						"          close_date as date,",
+						"          status as string,",
+						"          currency as string,",
+						"          interest_rate as decimal(5,2),",
+						"          is_joint_account as boolean,",
+						"          minimum_balance as decimal(10,2),",
+						"          nominee_name as string,",
+						"          missing_nominee_flag as boolean,",
+						"          account_age_years as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     inferDriftedColumnTypes: true,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcedimaccounts",
+						"source(output(",
+						"          loan_id as string,",
+						"          customer_id as string,",
+						"          loan_type as string,",
+						"          branch_id as string,",
+						"          sanction_date as date,",
+						"          disbursement_date as date,",
+						"          maturity_date as date,",
+						"          principal_amount as decimal(14,2),",
+						"          outstanding_amount as decimal(14,2),",
+						"          interest_rate as decimal(5,2),",
+						"          tenure_months as integer,",
+						"          emi_amount as decimal(12,2),",
+						"          emi_due_date as integer,",
+						"          total_emis_paid as integer,",
+						"          emis_overdue as integer,",
+						"          overdue_category as string,",
+						"          collateral_type as string,",
+						"          collateral_value as decimal(14,2),",
+						"          loan_status as string,",
+						"          loan_officer_id as string,",
+						"          is_npa as boolean,",
+						"          insurance_linked_flag as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcefactloans",
+						"source(output(",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          transaction_date as date,",
+						"          transaction_time as timestamp,",
+						"          transaction_type as string,",
+						"          transaction_mode as string,",
+						"          category as string,",
+						"          channel as string,",
+						"          amount as decimal(14,2),",
+						"          currency as string,",
+						"          status as string,",
+						"          beneficiary_account as string,",
+						"          beneficiary_name as string,",
+						"          reference_number as string,",
+						"          narration as string,",
+						"          balance_after_txn as decimal(14,2),",
+						"          is_suspicious as boolean,",
+						"          is_internal_transfer as boolean,",
+						"          meta_device_id as string,",
+						"          meta_ip_address as string,",
+						"          meta_location_city as string,",
+						"          meta_processing_bank as string,",
+						"          meta_batch_id as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcefacttransactions",
+						"sourcefacttransactions filter(transaction_date >= addMonths(currentDate(), -12)) ~> filterlast12months",
+						"sourcedimcustomers, sourcedimaccounts join(sourcedimcustomers@customer_id == sourcedimaccounts@customer_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joincustomeraccount",
+						"joincustomeraccount, sourcefactloans join(sourcedimaccounts@customer_id == sourcefactloans@customer_id,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> joinloans",
+						"joinloans, filterlast12months join(sourcedimaccounts@account_number == sourcefacttransactions@account_number,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> jointransactions",
+						"jointransactions aggregate(groupBy(sourcedimcustomers@customer_id),",
+						"     {totalaccountsheld    } = countIf(!isNull(sourcedimaccounts@account_number)),",
+						"          {totaloutstandingloan } = sum(toDouble(outstanding_amount)),",
+						"          {totaltxnvalue12m     } = sum(amount),",
+						"          {creditscore          } = first(toInteger(credit_score)),",
+						"          {kycstatus            } = first(kyc_status)) ~> aggregatecustomer360",
+						"aggregatecustomer360 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          customer_id as string,",
+						"          full_name as string,",
+						"          city as string,",
+						"          kyc_status as string,",
+						"          credit_score as integer,",
+						"          customer_type as string,",
+						"          total_accounts_held as integer,",
+						"          total_active_accounts as integer,",
+						"          total_loans as integer,",
+						"          total_outstanding_loan_amt as decimal(16,2),",
+						"          total_npa_loans as integer,",
+						"          txn_value_last_12_months as decimal(16,2),",
+						"          txn_count_last_12_months as integer,",
+						"          last_transaction_date as date,",
+						"          total_fraud_alerts as integer,",
+						"          confirmed_fraud_count as integer",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sinkcustomer360"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dff_agg_fraud_summary')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Dim_fact_fraud_alerts",
+								"type": "DatasetReference"
+							},
+							"name": "sourcefraudalerts"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "agg_fraud_summary",
+								"type": "DatasetReference"
+							},
+							"name": "sinkfraudsummary"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedfraudmonth"
+						},
+						{
+							"name": "aggregatefraudsummary"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          alert_id as string,",
+						"          transaction_id as string,",
+						"          account_number as string,",
+						"          customer_id as string,",
+						"          alert_type as string,",
+						"          severity as string,",
+						"          alert_raised_date as date,",
+						"          alert_raised_time as string,",
+						"          alert_status as string,",
+						"          assigned_to as string,",
+						"          unassigned_flag as boolean,",
+						"          resolution as string,",
+						"          resolved_date as date,",
+						"          resolution_days as integer,",
+						"          amount_at_risk as decimal(14,2),",
+						"          is_confirmed_fraud as boolean,",
+						"          sar_filed as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     format: 'table') ~> sourcefraudalerts",
+						"sourcefraudalerts derive({alertmonth } = month(alert_raised_date),",
+						"          alertyear = year(alert_raised_date)) ~> derivedfraudmonth",
+						"derivedfraudmonth aggregate(groupBy(severity,",
+						"          {alertmonth },",
+						"          alertyear),",
+						"     {alertcount         } = count(alert_id),",
+						"          confirmedfraud = sum(toInteger(toString(is_confirmed_fraud))),",
+						"          totalamountatrisk = sum(toDouble(amount_at_risk)),",
+						"          avgresolutiondays = avg(toDouble(iifNull(resolution_days, 0)))) ~> aggregatefraudsummary",
+						"aggregatefraudsummary sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          agg_id as integer,",
+						"          alert_year as integer,",
+						"          alert_month as integer,",
+						"          severity as string,",
+						"          total_alerts_raised as integer,",
+						"          confirmed_fraud_count as integer,",
+						"          unassigned_alert_count as integer,",
+						"          sar_filed_count as integer,",
+						"          total_amount_at_risk as decimal(16,2),",
+						"          avg_resolution_days as decimal(6,1)",
+						"     ),",
+						"     deletable:false,",
+						"     insertable:true,",
+						"     updateable:false,",
+						"     upsertable:false,",
+						"     truncate:true,",
+						"     format: 'table',",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          alert_year = alertyear,",
+						"          alert_month = {alertmonth },",
+						"          severity",
+						"     )) ~> sinkfraudsummary"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_build_aggregations')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dffaggbranchperformance",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_agg_branch_performance",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourcedimaccounts": {},
+									"sourcefactloans": {},
+									"sourcefacttransactions": {},
+									"sourcedimcustomers": {},
+									"sinkbranchperformance": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dffaggcustomer360",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dffaggbranchperformance",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dff_agg_customer360",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourcedimcustomers": {},
+									"sourcedimaccounts": {},
+									"sourcefactloans": {},
+									"sourcefacttransactions": {},
+									"sinkcustomer360": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dffaggfraudsummary",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dffaggcustomer360",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dff_agg_fraud_summary",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourcefraudalerts": {},
+									"sinkfraudsummary": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-05-26T05:57:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_agg_branch_performance')]",
+				"[concat(variables('factoryId'), '/dataflows/dff_agg_customer360')]",
+				"[concat(variables('factoryId'), '/dataflows/dff_agg_fraud_summary')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_dimensions')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dfdimcustomers",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_dim_customer",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"sourcecustomers": {},
+									"sinkcustomers": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dfdimaccounts",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dfdimcustomers",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_dim_account",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"accountsource": {},
+									"sinkaccounts": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dfdimemployees",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dfdimaccounts",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_dim_employees",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"dfdimemployees": {},
+									"sinkemployees": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dfdimbranches",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dfdimemployees",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_dim_branches",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"customersbranch": {},
+									"accountsbranch": {},
+									"employeesbranch": {},
+									"sinkbranches": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dfdimloantypes",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dfdimbranches",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_dim_loan_types",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"loanssource": {},
+									"sinkloantypes": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-05-26T05:57:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_dim_customer')]",
+				"[concat(variables('factoryId'), '/dataflows/df_dim_account')]",
+				"[concat(variables('factoryId'), '/dataflows/df_dim_employees')]",
+				"[concat(variables('factoryId'), '/dataflows/df_dim_branches')]",
+				"[concat(variables('factoryId'), '/dataflows/df_dim_loan_types')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_fact_loans')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dffactloans",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_fact_loans",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"loanssource": {},
+									"sinkloans": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-05-26T05:57:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_fact_loans')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_fact_transactions')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dffacttransactions",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_fact_transactions",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"transactionssource": {},
+									"sinktransactions": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-05-26T05:57:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_fact_transactions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_load_fraud_and_balances')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "dffactfraudalerts",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_fact_fraud_alerts",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"fraudsource": {},
+									"sinkfraudalerts": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					},
+					{
+						"name": "dffactaccountbalances",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "dffactfraudalerts",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.00:30:00",
+							"retry": 2,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_fact_account_balances",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"accountssource": {},
+									"sinkaccountbalances": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-05-26T05:57:23Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/df_fact_fraud_alerts')]",
+				"[concat(variables('factoryId'), '/dataflows/df_fact_account_balances')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_master_bank_etl')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "pl_load_dimensions",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_dimensions",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "pl_load_fact_transactions",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_load_dimensions",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_fact_transactions",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "pl_load_fact_loans",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_load_fact_transactions",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_fact_loans",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "pl_load_fraud_and_balances",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_load_fact_transactions",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_load_fraud_and_balances",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "pl_build_aggregations",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "pl_load_fact_loans",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							},
+							{
+								"activity": "pl_load_fraud_and_balances",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_build_aggregations",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-05-26T05:57:24Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_load_dimensions')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_load_fact_transactions')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_load_fact_loans')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_load_fraud_and_balances')]",
+				"[concat(variables('factoryId'), '/pipelines/pl_build_aggregations')]"
+			]
+		}
+	]
+}
